@@ -63,11 +63,32 @@ def print_movie(movie):
 
 def update_rating():
     """
-    Prompt user for a Movie Title.
-    Prompt user for a rating (integer).
-    Append the rating to the movie's Ratings list in the database.
+    Prompt user for a Movie Title and a new rating.
+    Add that rating to the movie's Ratings list in the database.
     """
-    print("updating rating")
+    title = input("Enter movie title to update: ")
+    new_rating = input("Enter new rating: ")
+    try:
+        table = get_table()
+        response = table.get_item(Key={"Title": title})
+        movie = response.get("Item")
+        
+        if not movie:
+            print(f"Movie '{title}' not found.")
+            return
+        
+        ratings = movie.get("Ratings", [])
+        ratings.append(new_rating)
+        
+        table.update_item(
+            Key={"Title": title},
+            UpdateExpression="SET Ratings = :r",
+            ExpressionAttributeValues={":r": ratings}
+        )
+        print(f"Added rating {new_rating} to movie '{title}'.")
+    except Exception as e:
+        print(f"An error occurred: {e}")
+
 
 def delete_movie():
     """
