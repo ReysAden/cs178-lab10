@@ -9,18 +9,57 @@ import boto3
 dynamodb = boto3.resource('dynamodb', region_name='us-east-1')
 table = dynamodb.Table('Movies')
 
+def get_table():
+    return table
+
+
 def create_movie():
     """
-    Prompt user for a Movie Title.
-    Add the movie to the database with the title and an empty Ratings list.
+    Prompt user for Movie Title, Year, Director, Genre.
+    Create a new item in the Movies table with those attributes.
     """
-    print("creating a movie")
+    title = input("Enter movie title: ")
+    year = input("Enter movie year: ")
+    director = input("Enter movie director: ")
+    genre = input("Enter movie genre: ")
+    ratings = input("Enter movie rating: ")
+    item = {
+        "Title": title,
+        "Year": year,
+        "Director": director,
+        "Genre": genre,
+        "Ratings": []
+    }
+    table = get_table()
+    table.put_item(Item=item)
 
 def print_all_movies():
-    """
-    Display all movies in the database.
-    """
-    print("display all movies")
+    """Scan the entire Movies table and print each item."""
+    table = get_table()
+    
+    response = table.scan()
+    items = response.get("Items", [])
+    
+    if not items:
+        print("No movies found. Make sure your DynamoDB table has data.")
+        return
+
+    for movie in items:
+        print_movie(movie)
+
+def print_movie(movie):
+    title = movie.get("Title", "Unknown Title")
+    year = movie.get("Year", "Unknown Year")
+    ratings = movie.get("Ratings", "No ratings")
+    Director = movie.get("Director", "Unknown Director")
+    Genre = movie.get("Genre", "Unknown Genre")
+
+    print(f"  Title  : {title}")
+    print(f"  Year   : {year}")
+    print(f"  Ratings: {ratings}")
+    print(f"  Director:{Director}")
+    print(f"  Genre:{Genre}")
+    print()
 
 def update_rating():
     """
@@ -62,6 +101,7 @@ def main():
         if input_char.upper() == "C":
             create_movie()
         elif input_char.upper() == "R":
+            print("printing all movies...")
             print_all_movies()
         elif input_char.upper() == "U":
             update_rating()
